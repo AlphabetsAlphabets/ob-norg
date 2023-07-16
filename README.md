@@ -1,2 +1,2 @@
 # ob-norg
-Converts Obsidian syntax to Norg syntax.
+Converts Obsidian syntax to Norg syntax. 
