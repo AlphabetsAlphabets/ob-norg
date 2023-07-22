@@ -1,15 +1,19 @@
 -- The things I need to convert
 --
--- [[101 Matrix identities]] -> {* 101 Matrix identities}
--- [[101 Matrix identities#^7ef311]] -> {* 101 Matrix identities}
--- [[101 Matrix identities#101 Matrix Identities | Hello]] -> {:101 Matrix identities:* 101 Matrix Identities}[Hello]
--- [[101 Matrix identities#101 Matrix Identities]] -> {:101 Matrix identities:* 101 Matrix Identities}
+-- [[Note]] -> {:Note:}
+-- [[Note#^7ef311]] -> {:Note:}
+-- [[Note#Heading]] -> {:Note:* Heading}
+-- [[Note | text]] -> {:Note:}[text]
+-- [[Note#Heading | text]] -> {:Note:*Heading}[text]
 
 local strings = {
-  "[[101 Matrix identities]]",
-  "[[101 Matrix identities#^7ef311]]",
-  "[[101 Matrix identities#101 Matrix Identities]]",
-  "[[101 Matrix identities#101 Matrix Identities | Hello   ]]",
+  "[[Note]]",
+  "[[Note#^7ef311]]",
+  "[[Note#Heading]]",
+  "[[Note | text]]",
+  "[[Note#Heading | text]]",
+  "[[Note#Heading|text]]",
+  "[[Note#Heading| text]]",
 }
 
 -- The links but in norg syntax
@@ -23,23 +27,31 @@ for _, string in ipairs(strings) do
 
   -- Check if there's just a # if it's just this then skip everything else.
   local linkToHeading = string.find(link, "#", 1, true)
-  if linkToHeading ~= nil then
-    local filename = string.sub(link, 0, linkToHeading - 1)
-    local heading = string.sub(link, linkToHeading + 1)
-    local new = "{:" .. filename .. ":* " .. heading .. "}"
-    table.insert(formatted, new)
+  local customText = string.find(link, "|", 1, true)
+
+  local filename = nil
+  filename = string.sub(link, 0, (linkToHeading and linkToHeading - 1) or customText)
+  if filename == nil then
+    filename = link
   end
 
-  -- Check if there is a ^
+  if customText ~= nil then
+    local leftIsSpace = string.sub(filename, customText - 1, customText - 1) == ' '
+    local rightIsSpace = string.sub(filename, customText + 1) == ' '
 
-  -- Check if there is a |
-  local customTextbarrier = string.find(link, "|", 1, true)
-  if customTextbarrier ~= nil then
-    local customText = string.sub(link, customTextbarrier + 1)
-    -- {:test:}[ sup] this breaks and isn't counted as a link.
-    -- Which is why the whitespace is trimmed off
-    customText = customText:gsub("^%s*(.-)%s*$", "%1")
-    print(customText)
+    if leftIsSpace and rightIsSpace == false then
+       filename = string.sub(filename, 0, customText - 2)
+    end
+
+  end
+
+  new = "{:" .. filename .. ":}"
+
+  -- check for "#"
+  local headingIndex = string.find(link, "#", 1, true)
+  if headingIndex ~= nil then
+    local heading = string.sub(link, headingIndex)
+    print(string.format("Heading: '%s'", heading))
   end
 
   -- replace the text appropriately.
