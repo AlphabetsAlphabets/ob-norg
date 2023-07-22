@@ -16,16 +16,11 @@ local strings = {
   "[[Note#Heading| text]]",
 }
 
--- The links but in norg syntax
-local formatted = {}
-
 for _, string in ipairs(strings) do
+  print(string.format("Link to format: '%s'", string))
   local pattern = "%[%[(.-)%]%]"
   local link = string.match(string, pattern)
 
-  -- I'll need to find the proper order of operations for this
-
-  -- Check if there's just a # if it's just this then skip everything else.
   local linkToHeading = string.find(link, "#", 1, true)
   local customText = string.find(link, "|", 1, true)
 
@@ -45,20 +40,16 @@ for _, string in ipairs(strings) do
 
   end
 
-  new = "{:" .. filename .. ":}"
+  local new = "{:" .. filename .. ":}"
 
   -- check for "#"
   local headingIndex = string.find(link, "#", 1, true)
   if headingIndex ~= nil then
     local heading = string.sub(link, headingIndex)
+    -- Do a check for ^ to the right if there is a ^ to the right
+    -- I can safely discard it and exit out of this if statement.
     print(string.format("Heading: '%s'", heading))
   end
 
-  -- replace the text appropriately.
-  -- local new = string.gsub(string, pattern, "REPLACED")
+  print(string.format("Result: '%s'\n", new))
 end
-
-for _, v in ipairs(formatted) do
-  print(v)
-end
-
