@@ -10,11 +10,23 @@ local function trim(s)
   return (s:gsub("^%s*(.-)%s*$", "%1"))
 end
 
+local function extract_heading(link, index)
+  local heading = nil
+  local linkToParagraph = link:find("^", 1, true)
+  if linkToParagraph == nil then
+    heading = trim(link:sub(index + 2, link:len()))
+    heading = heading:gsub("#", "*")
+    heading = string.format("* %s", heading)
+  end
+
+  return heading or ""
+end
+
 local strings = {
   "[[Note#^7ef311]]",
   "[[Note#Heading]]",
-  "[[Note | Text]]",
-  "[[Note]]",
+  "[[Note#Head ing]]",
+  "[[Note#Heading ]]",
 }
 
 for _, string in ipairs(strings) do
@@ -30,5 +42,7 @@ for _, string in ipairs(strings) do
 
   local stop = (linkToHeading or textBarrier)
   local filename = link:sub(0, stop)
-  print(filename)
+
+  local heading = extract_heading(link, linkToHeading)
+  print(string.format("{:%s:%s}", filename, heading))
 end
