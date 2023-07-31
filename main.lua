@@ -10,39 +10,75 @@ local function trim(s)
   return (s:gsub("^%s*(.-)%s*$", "%1"))
 end
 
-local function extract_heading(link, index)
-  local heading = nil
-  local linkToParagraph = link:find("^", 1, true)
-  if linkToParagraph == nil then
-    heading = trim(link:sub(index + 2, link:len()))
-    heading = heading:gsub("#", "*")
-    heading = string.format("* %s", heading)
+local function extract_custom_text(heading)
+  local custom_text = nil
+  local textBarrier = heading:find("|", 1, true)
+  if textBarrier == nil then
+    return heading
   end
 
-  return heading or ""
+  custom_text = trim(heading:sub(textBarrier + 1))
+  heading = trim(heading:sub(0, textBarrier - 1))
+
+  return heading, custom_text
+end
+
+-- After a file name links always start with # or |
+local function extract_heading(link)
+  local heading = nil
+
+  local linkToHeading = link:find("#", 1, true)
+  if linkToHeading ~= nil then
+    linkToHeading = linkToHeading - 1
+  else
+    linkToHeading = link:len()
+  end
+
+  -- If there's a # there's a chance for a ^
+  local linkToParagraph = link:find("^", 1, true)
+  if linkToParagraph ~= nil then
+    return nil
+  end
+
+  local custom_text = nil
+  heading = link:sub(linkToHeading + 1, link:len())
+  heading, custom_text = extract_custom_text(heading)
+  heading = heading:gsub("#", "* ")
+  heading = string.format("%s", heading)
+
+  return heading, custom_text
+end
+
+
+local function extract_filename(link)
+  local filename = nil
+
+  local heading = link:find("#", 1, true)
+  if heading ~= nil then
+    filename = trim(link:sub(0, heading - 1))
+  end
+
+  return filename
 end
 
 local strings = {
-  "[[Note#^7ef311]]",
-  "[[Note#Heading]]",
-  "[[Note#Head ing]]",
-  "[[Note#Heading ]]",
+  "[[Note | text]]",
+  "[[Note#Heading | t ext]]",
+  "[[Note#Hea ding |   t ext   ]]",
+  -- Not handled "[[Note#^123123 | t ext]]",
 }
 
 for _, string in ipairs(strings) do
   local pattern = "%[%[(.-)%]%]"
   local link = string:match(pattern)
-  print(string.format("Link to format: '%s'", link))
+  print(string.format("Link to format: '%s'", string))
 
-  local linkToHeading = link:find("#", 1, true)
-  linkToHeading = linkToHeading and linkToHeading - 1 or link:len()
+  local filename = nil
+  local heading = nil
+  local custom_text = nil
 
-  local textBarrier = link:find("#", 1, true)
-  textBarrier = textBarrier and textBarrier - 1 or link:len()
+  filename = extract_filename(link)
+  heading, custom_text = extract_heading(link)
 
-  local stop = (linkToHeading or textBarrier)
-  local filename = link:sub(0, stop)
-
-  local heading = extract_heading(link, linkToHeading)
-  print(string.format("{:%s:%s}", filename, heading))
+  print(string.format("Filename: '%s', Heading: '%s', custom text: '%s'\n", filename, heading, custom_text))
 end
