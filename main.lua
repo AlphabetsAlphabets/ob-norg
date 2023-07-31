@@ -65,7 +65,6 @@ local strings = {
   "[[Note | text]]",
   "[[Note#Heading | t ext]]",
   "[[Note#Hea ding |   t ext   ]]",
-  -- Not handled "[[Note#^123123 | t ext]]",
 }
 
 for _, string in ipairs(strings) do
