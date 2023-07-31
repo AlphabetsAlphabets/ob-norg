@@ -10,17 +10,16 @@ local function trim(s)
   return (s:gsub("^%s*(.-)%s*$", "%1"))
 end
 
-local function extract_custom_text(heading)
+local function extract_custom_text(string)
   local custom_text = nil
-  local textBarrier = heading:find("|", 1, true)
+  local textBarrier = string:find("|", 1, true)
   if textBarrier == nil then
-    return heading
+    return string
   end
 
-  custom_text = trim(heading:sub(textBarrier + 1))
-  heading = trim(heading:sub(0, textBarrier - 1))
+  custom_text = trim(string:sub(textBarrier + 1))
 
-  return heading, custom_text
+  return custom_text
 end
 
 -- After a file name links always start with # or |
@@ -35,20 +34,28 @@ local function extract_heading(link)
   end
 
   -- If there's a # there's a chance for a ^
-  local linkToParagraph = link:find("^", 1, true)
-  if linkToParagraph ~= nil then
-    return nil
+  local link_to_paragraph = link:find("^", 1, true)
+  local custom_text = nil
+  if link_to_paragraph ~= nil then
+    custom_text = link:sub(link_to_paragraph + 1, link:len())
+    print(string.format("custom_text: '%s'", custom_text))
+    custom_text = extract_custom_text(custom_text)
+
+    heading = link:sub(link_to_paragraph + 1, link:len())
+    heading = heading:gsub("#", "* ")
+    heading = string.format("%s", heading)
+
+    return heading, custom_text
   end
 
-  local custom_text = nil
   heading = link:sub(linkToHeading + 1, link:len())
-  heading, custom_text = extract_custom_text(heading)
   heading = heading:gsub("#", "* ")
   heading = string.format("%s", heading)
 
+  custom_text = extract_custom_text(heading)
+
   return heading, custom_text
 end
-
 
 local function extract_filename(link)
   local filename = nil
@@ -65,6 +72,7 @@ local strings = {
   "[[Note | text]]",
   "[[Note#Heading | t ext]]",
   "[[Note#Hea ding |   t ext   ]]",
+  "[[Note#^123123 | t ext]]",
 }
 
 for _, string in ipairs(strings) do
